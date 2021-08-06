@@ -48,6 +48,8 @@ class Mission
         void saveSearchResultsToLog();
         void saveAgentsPathsToLog(const std::string &agentsFile, double time, double makespan, double flowtime,
                                   int HLExpansions, int HLNodes, double LLExpansions, double LLNodes);
+        void saveSingleResultToLog(const std::string &agentsFile, int agents, double time, double makespan, double flowtime,
+                                   int HLExpansions, int HLNodes, double LLExpansions, double LLNodes, double initCost);
         bool checkCorrectness();
         void saveAggregatedResultsToLog();
         void saveSeparateResultsToLog();

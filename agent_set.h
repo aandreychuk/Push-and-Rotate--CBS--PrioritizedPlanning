@@ -12,6 +12,15 @@
 #include "node.h"
 #include "agent_move.h"
 
+struct POI
+{
+    POI(int id_ = -1, int i_ = -1, int j_ = -1, double wait_ = -1):id(id_), i(i_), j(j_), wait(wait_) {}
+    int id;
+    int i;
+    int j;
+    double wait;
+};
+
 class AgentSet
 {
     private:
@@ -23,6 +32,7 @@ class AgentSet
         std::multimap<std::pair<int, int>, int> subgraphNodes;
         std::set<std::pair<int, int>>           subgraphPriorities;
         std::vector<Agent>                      agents;
+        std::vector<std::vector<POI>>           subgoals;
 
     public:
         bool readAgents(const char *FileName);
@@ -36,6 +46,7 @@ class AgentSet
         void setConnectedComponent(int i, int j, int compNum);
         void addComponentSize(int compSize);
         void setNodeSubgraph(int i, int j, int subgraphNum);
+        void addSubgoal(int id, POI poi) {subgoals[id].push_back(poi);}
         void removeSubgraphs(int i, int j);
 
         int getAgentCount() const;
@@ -47,6 +58,8 @@ class AgentSet
         int getConnectedComponentsCount() const;
         int getConnectedComponent(int i, int j);
         int getComponentSize(int i, int j);
+        void resizeSubgoals(int n) { subgoals.resize(n); }
+        std::vector<POI> getSubgoals(int id) const {return subgoals[id];}
 };
 
 #endif // AGENT_SET_H

@@ -85,6 +85,7 @@ class ISearch
                                               int agentId, const ConstraintsSet &constraints,
                                               const ConflictAvoidanceTable &CAT, bool isGoal);
         virtual bool checkGoal(const NodeType &cur, int goalTime, int agentId, const ConstraintsSet &constraints);
+        virtual bool checkWait(const NodeType& node, double wait_duration) {return true;}
         virtual void addStartNode(NodeType &node, const Map &map, const ConflictAvoidanceTable &CAT);
         virtual void addSuboptimalNode(NodeType &node, const Map &map, const ConflictAvoidanceTable &CAT) {}
         virtual bool checkOpenEmpty();

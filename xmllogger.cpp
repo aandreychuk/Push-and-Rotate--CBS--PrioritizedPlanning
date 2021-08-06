@@ -166,7 +166,6 @@ void XmlLogger::writeToLogAgentsPaths(const AgentSet& agentSet,
     summaryElement->SetAttribute(CNS_TAG_ATTR_LLE, LLExpansions);
     summaryElement->SetAttribute(CNS_TAG_ATTR_LLN, LLNodes);
     log->InsertEndChild(summaryElement);
-
     for (int i = 0; i < agentsPaths.size(); ++i) {
         Agent agent = agentSet.getAgent(i);
         XMLElement *agentElement = doc.NewElement(CNS_TAG_AGENT);
@@ -285,6 +284,29 @@ void XmlLogger::writeToLogSummary(unsigned int numberofsteps, unsigned int nodes
     element->SetAttribute(CNS_TAG_ATTR_LENGTH, length);
     element->SetAttribute(CNS_TAG_ATTR_LENGTH_SCALED, length*cellSize);
     element->SetAttribute(CNS_TAG_ATTR_TIME, std::to_string(time).c_str());
+}
+
+void XmlLogger::writeToLogSingleResults(const std::string &agentsFile, int agents, double time, double makespan, double flowtime,
+                                             int HLExpansions, int HLNodes, double LLExpansions, double LLNodes, double initCost)
+{
+    if (loglevel == CN_LP_LEVEL_NOPE_WORD)
+        return;
+    XMLElement *node = doc.FirstChildElement(CNS_TAG_ROOT)->FirstChildElement(CNS_TAG_LOG);
+    XMLElement *results = doc.NewElement(CNS_TAG_RESULTS);
+    if (!agentsFile.empty()) {
+        results->SetAttribute(CNS_TAG_AGENTS_FILE, agentsFile.c_str());
+    }
+    results->SetAttribute("agents_num", agents);
+    results->SetAttribute("runtime", time);
+    results->SetAttribute("flowtime", flowtime);
+    results->SetAttribute("makespan", makespan);
+    results->SetAttribute("initCost", initCost);
+    results->SetAttribute("HLExpansions", HLExpansions);
+    results->SetAttribute("HLNodes", HLNodes);
+    results->SetAttribute("LLExpansions", LLExpansions);
+    results->SetAttribute("LLNodes", LLNodes);
+    node->InsertEndChild(results);
+
 }
 
 void XmlLogger::writeToLogNotFound()

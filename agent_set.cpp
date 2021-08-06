@@ -3,11 +3,13 @@
 void AgentSet::clear() {
     occupiedNodes.clear();
     agents.clear();
+    subgoals.clear();
 }
 
 void AgentSet::addAgent(int start_i, int start_j, int goal_i, int goal_j) {
     occupiedNodes[std::make_pair(start_i, start_j)] = agents.size();
     agents.push_back(Agent(start_i, start_j, goal_i, goal_j, agents.size()));
+    subgoals.resize(agents.size());
 }
 
 void AgentSet::setAgentPosition(int agentId, Node pos) {
@@ -67,16 +69,35 @@ bool AgentSet::readAgents(const char *FileName)
         return false;
     }
 
-    for (node = root->FirstChildElement(); node; node = node->NextSiblingElement()) {
-        int id, start_i, start_j, goal_i, goal_j;
+    for (node = root->FirstChildElement("agent"); node; node = node->NextSiblingElement("agent")) {
+        int id(-1), start_i(-1), start_j(-1), goal_i(-1), goal_j(-1);
         node->QueryIntAttribute("id", &id);
         node->QueryIntAttribute("start_i", &start_i);
         node->QueryIntAttribute("start_j", &start_j);
         node->QueryIntAttribute("goal_i", &goal_i);
         node->QueryIntAttribute("goal_j", &goal_j);
         addAgent(start_i, start_j, goal_i, goal_j);
+        //std::cout<<"1\twarehouse.map\t84\t21\t"<<start_j<<"\t"<<start_i<<"\t"<<goal_j<<"\t"<<goal_i<<"\t30\n";
     }
 
+    if(root->FirstChildElement("agents"))
+        for (node = root->FirstChildElement("agents")->FirstChildElement("agent"); node; node = node->NextSiblingElement("agent")) {
+            int id(-1), start_i(-1), start_j(-1), goal_i(-1), goal_j(-1);
+            node->QueryIntAttribute("id", &id);
+            node->QueryIntAttribute("start_i", &start_i);
+            node->QueryIntAttribute("start_j", &start_j);
+            node->QueryIntAttribute("goal_i", &goal_i);
+            node->QueryIntAttribute("goal_j", &goal_j);
+            addAgent(start_i, start_j, goal_i, goal_j);
+        }
+    if(root->FirstChildElement("sequences"))
+        for (node = root->FirstChildElement("sequences")->FirstChildElement("sequence"); node; node = node->NextSiblingElement("sequence")) {
+            int agent_id = node->IntAttribute("agent_id");
+            for(auto subgoal = node->FirstChildElement("subgoal"); subgoal; subgoal = subgoal->NextSiblingElement("subgoal")) {
+                POI poi(subgoal->IntAttribute("id"), subgoal->IntAttribute("i"), subgoal->IntAttribute("j"), 0);
+                this->addSubgoal(agent_id, poi);
+            }
+        }
     return true;
 }
 

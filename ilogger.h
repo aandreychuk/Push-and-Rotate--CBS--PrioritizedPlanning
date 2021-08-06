@@ -27,6 +27,8 @@ class ILogger
                                                  TestingResults &res,
                                                  const std::string& agentsFile = "") = 0;
         virtual void writeToLogSummary(unsigned int numberofsteps, unsigned int nodescreated, float length, double time, double cellSize) = 0;
+        virtual void writeToLogSingleResults(const std::string &agentsFile, int agents, double time, double makespan, double flowtime,
+                                             int HLExpansions, int HLNodes, double LLExpansions, double LLNodes, double initCost) = 0;
         virtual ~ILogger() {};
     protected:
         std::string loglevel;

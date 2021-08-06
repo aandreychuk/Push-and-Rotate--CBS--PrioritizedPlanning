@@ -23,7 +23,8 @@ void SIPP<NodeType>::createSuccessorsFromNode(const NodeType &cur, NodeType &nei
     std::vector<std::pair<int, int>> safeIntervals = constraints.getSafeIntervals(
                 neigh.i, neigh.j, agentId, cur.g + 1,
                 cur.endTime + (cur.endTime != CN_INFINITY));
-
+    //std::cout<<cur.i<<" "<<cur.j<<" "<<cur.g<<" "<<cur.endTime<<" cur node\n";
+    //std::cout<<"create succs for node "<<neigh.i<<" "<<neigh.j<<" "<<neigh.g<<" "<<cur.endTime<<" "<<neigh.endTime<<"\n";
     for (auto interval : safeIntervals) {
         addOptimalNode(cur, neigh, interval, agentId, constraints, successors);
         setOptimal(neigh, false);
@@ -68,6 +69,11 @@ void SIPP<NodeType>::splitBySoftConflicts(std::vector<std::pair<int, int>> &soft
 template<typename NodeType>
 bool SIPP<NodeType>::checkGoal(const NodeType &cur, int goalTime, int agentId, const ConstraintsSet &constraints) {
     return goalTime == -1 || cur.g <= goalTime;
+}
+
+template<typename NodeType>
+bool SIPP<NodeType>::checkWait(const NodeType &node, double wait_duration) {
+    return node.g + wait_duration < node.endTime;
 }
 
 template class SIPP<SIPPNode>;

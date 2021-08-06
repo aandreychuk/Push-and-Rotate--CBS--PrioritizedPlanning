@@ -38,13 +38,13 @@ int main(int argc, char* argv[])
                         mission.startSearch(agentsFile);
                     }
                 }
-                if (!mission.getSingleExecution()) {
+                /*if (!mission.getSingleExecution()) {
                     if (mission.getSaveAggregatedResults()) {
                         mission.saveAggregatedResultsToLog();
                     } else {
                         mission.saveSeparateResultsToLog();
                     }
-                }
+                }*/
                 std::cout << "All searches are finished!" << std::endl;
             }
         }

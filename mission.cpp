@@ -163,9 +163,17 @@ void Mission::startSearch(const std::string &agentsFile)
     TestingResults res;
     for (int i = minAgents; i <= maxAgents; i += config.agentsStep) {
         AgentSet curAgentSet;
+        if(config.withSubgoals)
+            curAgentSet.resizeSubgoals(maxAgents);
         for (int j = 0; j < i; ++j) {
             Agent agent = agentSet.getAgent(j);
             curAgentSet.addAgent(agent.getCur_i(), agent.getCur_j(), agent.getGoal_i(), agent.getGoal_j());
+            if(config.withSubgoals)
+            {
+                auto seq = agentSet.getSubgoals(agent.getId());
+                for(auto subgoal:seq)
+                    curAgentSet.addSubgoal(agent.getId(), subgoal);
+            }
         }
 
         multiagentSearch->clear();
@@ -195,6 +203,11 @@ void Mission::startSearch(const std::string &agentsFile)
                                  sr.HLExpansions.back(), sr.HLNodes.back(),
                                  sr.AvgLLExpansions.back(), sr.AvgLLNodes.back());
         }
+        else
+            saveSingleResultToLog(agentsFile, i, sr.time.back(), sr.makespan.back(), sr.flowtime.back(),
+                                  sr.HLExpansions.back(), sr.HLNodes.back(),
+                                  sr.AvgLLExpansions.back(), sr.AvgLLNodes.back(), sr.initCost.empty() ? -1 : sr.initCost.back());
+
         if (!checkCorrectness()) {
             std::cout << "Search returned incorrect results!" << std::endl;
             break;
@@ -314,6 +327,13 @@ void Mission::saveAgentsPathsToLog(const std::string &agentsFile, double time,
                                    double LLExpansions, double LLNodes) {
     logger->writeToLogAgentsPaths(agentSet, agentsPaths, agentsFile, time, makespan, flowtime,
                                   HLExpansions, HLNodes, LLExpansions, LLNodes);
+    logger->saveLog();
+}
+
+void Mission::saveSingleResultToLog(const std::string &agentsFile, int agents, double time, double makespan, double flowtime,
+                                    int HLExpansions, int HLNodes, double LLExpansions, double LLNodes, double initCost)
+{
+    logger->writeToLogSingleResults(agentsFile, agents, time, makespan, flowtime, HLExpansions, HLNodes, LLExpansions, LLNodes, initCost);
     logger->saveLog();
 }
 

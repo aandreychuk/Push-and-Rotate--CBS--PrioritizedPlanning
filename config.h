@@ -37,6 +37,7 @@ class Config
         bool            saveAggregatedResults = true;
         double          focalW = 1.0;
         int             agentsStep = 1;
+        bool            withSubgoals = false;
 
     private:
         bool getValueFromText(tinyxml2::XMLElement *elem, const char *name, const char *typeName, void *field);

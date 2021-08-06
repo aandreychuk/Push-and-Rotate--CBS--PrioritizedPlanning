@@ -20,6 +20,7 @@ struct MultiagentSearchResult
     std::vector<double>             flowtime;
     std::vector<double>             makespan;
     std::vector<double>             totalNodes;
+    std::vector<double>             initCost;
 
     MultiagentSearchResult(bool Pathfound = false) {
         pathfound = Pathfound;

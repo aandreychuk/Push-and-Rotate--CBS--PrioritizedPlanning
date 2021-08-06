@@ -41,6 +41,9 @@ public:
 
     void writeToLogSummary(unsigned int numberofsteps, unsigned int nodescreated, float length, double time, double cellSize);
 
+    void writeToLogSingleResults(const std::string &agentsFile, int agents, double time, double makespan, double flowtime,
+                                                 int HLExpansions, int HLNodes, double LLExpansions, double LLNodes, double initCost);
+
 private:
     std::string LogFileName;
     tinyxml2::XMLDocument doc;

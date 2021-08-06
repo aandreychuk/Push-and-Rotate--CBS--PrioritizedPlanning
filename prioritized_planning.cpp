@@ -114,7 +114,8 @@ MultiagentSearchResult PrioritizedPlanning<SearchType>::startSearch(const Map &m
     result.time = {static_cast<double>(elapsedMilliseconds) / 1000};
     result.AvgLLExpansions = {(double)std::accumulate(LLExpansions.begin(), LLExpansions.end(), 0) / LLExpansions.size()};
     result.AvgLLNodes = {(double)std::accumulate(LLNodes.begin(), LLNodes.end(), 0) / LLNodes.size()};
-
+    result.HLExpansions = {1};
+    result.HLNodes = {1};
     std::pair<int, int> costs = result.getCosts();
     result.makespan = {double(costs.first)};
     result.flowtime = {double(costs.second)};

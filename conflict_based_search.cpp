@@ -279,15 +279,16 @@ MultiagentSearchResult ConflictBasedSearch<SearchType>::startSearch(const Map &m
     }
 
     CBSNode<SearchType> root;
+    MultiagentSearchResult result(false);
     int agentCount = agentSet.getAgentCount();
     if (open.empty() && focal.empty()) {
         std::vector<std::list<Node>::iterator> starts(agentCount), ends(agentCount);
         std::vector<MDD> mdds;
         for (int i = 0; i < agentSet.getAgentCount(); ++i) {
             Agent agent = agentSet.getAgent(i);
-            Astar<> astar(false, false);
-            astar.setPerfectHeuristic(&perfectHeuristic);
-            SearchResult searchResult = astar.startSearch(map, agentSet, agent.getStart_i(), agent.getStart_j(),
+            SIPP<> sipp;
+            sipp.setPerfectHeuristic(&perfectHeuristic);
+            SearchResult searchResult = sipp.startSearch(map, agentSet, agent.getStart_i(), agent.getStart_j(),
                                                             agent.getGoal_i(), agent.getGoal_j());
             if (!searchResult.pathfound) {
                 std::cout << "fail" << std::endl;
@@ -316,11 +317,11 @@ MultiagentSearchResult ConflictBasedSearch<SearchType>::startSearch(const Map &m
                 sumLb.insert(root.sumLb);
             }
         }
-
+        result.initCost.push_back(root.cost);
+        //std::cout<<root.cost<<" root cost\n";
         open.insert(root);
     }
 
-    MultiagentSearchResult result(false);
     std::vector<int> LLExpansions, LLNodes;
 
     int t = 0;
@@ -331,6 +332,7 @@ MultiagentSearchResult ConflictBasedSearch<SearchType>::startSearch(const Map &m
         std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
         if (std::chrono::duration_cast<std::chrono::milliseconds>(now - begin).count() > config.maxTime) {
             result.pathfound = false;
+            //std::cout<<"TIMELIMIT!\n";
             break;
         }
 
@@ -459,15 +461,14 @@ MultiagentSearchResult ConflictBasedSearch<SearchType>::startSearch(const Map &m
             std::swap(conflict.id1, conflict.id2);
             std::swap(conflict.pos1, conflict.pos2);
         }
-
         /*std::cout << t << " " << cur.paths.begin()->first << " " <<
             conflict.id1 << " " << conflict.id2 << " " << conflict.pos1.i << " " << conflict.pos1.j << " " <<
             conflict.pos2.i << " " << conflict.pos2.j << " " << conflict.time << " " <<
-            open.size() + close.size() + focal.size() << std::endl;
+            open.size() + close.size() + focal.size() << " " << cur.G << std::endl;*/
 
         if (cur.search != nullptr) {
             std::cout << cur.search.get()->getSize() << std::endl;
-        }*/
+        }
 
         CBSNode<SearchType> child1, child2;
         std::vector<CBSNode<SearchType>> children;

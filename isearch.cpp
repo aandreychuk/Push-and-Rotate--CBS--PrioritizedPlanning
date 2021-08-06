@@ -21,6 +21,7 @@ SearchResult ISearch<NodeType>::startSearch(const Map &map, const AgentSet &agen
                                   bool withCAT, const ConflictAvoidanceTable &CAT)
 {
     sresult.pathfound = false;
+    std::list<Node> full_lppath, full_hppath;
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     if (goalTime != -1) {
         maxTime = goalTime;
@@ -47,55 +48,151 @@ SearchResult ISearch<NodeType>::startSearch(const Map &map, const AgentSet &agen
         addStartNode(cur, map, CAT);
         addSuboptimalNode(cur, map, CAT);
     }
-
-    while(!checkOpenEmpty()) {
-        ++sresult.numberofsteps;
-        if (sresult.numberofsteps % 100000 == 0) {
-            std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-            int elapsedMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
-            if (elapsedMilliseconds > 300000) {
-                break;
+    if (agentSet.getSubgoals(agentId).size() == 0)
+    {
+        while(!checkOpenEmpty()) {
+            ++sresult.numberofsteps;
+            if (sresult.numberofsteps % 100000 == 0) {
+                std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+                int elapsedMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
+                if (elapsedMilliseconds > 300000) {
+                    break;
+                }
             }
-        }
 
-        cur = getCur(map);
+            cur = getCur(map);
 
-        /*if (withTime && agentId == 6 && cur.i == 55 && cur.j == 207) {
+            /*if (withTime && agentId == 6 && cur.i == 55 && cur.j == 207) {
             std::cout << cur.i << " " << cur.j << " " << cur.g << " " << cur.conflictsCount << std::endl;
         }*/
 
-        bool goalNode = false;
-        if ((isGoal != nullptr && isGoal(NodeType(start_i, start_j), cur, map, agentSet)) ||
-            (isGoal == nullptr && cur.i == goal_i && cur.j == goal_j))
-        {
-            goalNode = true;
-            if (!constraints.hasFutureConstraint(cur.i, cur.j, cur.g, agentId) &&
-                checkGoal(cur, goalTime, agentId, constraints))
+            bool goalNode = false;
+            if ((isGoal != nullptr && isGoal(NodeType(start_i, start_j), cur, map, agentSet)) ||
+                    (isGoal == nullptr && cur.i == goal_i && cur.j == goal_j))
             {
-                sresult.pathfound = true;
-                break;
+                goalNode = true;
+                if (!constraints.hasFutureConstraint(cur.i, cur.j, cur.g, agentId) &&
+                        checkGoal(cur, goalTime, agentId, constraints))
+                {
+                    sresult.pathfound = true;
+                    break;
+                }
             }
-        }
 
-        removeCur(cur, map);
+            removeCur(cur, map);
 
-        if (goalNode) {
-            subtractFutureConflicts(cur);
-        }
+            if (goalNode) {
+                subtractFutureConflicts(cur);
+            }
 
-        close[cur.convolution(map.getMapWidth(), map.getMapHeight(), withTime)] = cur;
-        NodeType *curPtr = &(close.find(cur.convolution(map.getMapWidth(), map.getMapHeight(), withTime))->second);
+            close[cur.convolution(map.getMapWidth(), map.getMapHeight(), withTime)] = cur;
+            NodeType *curPtr = &(close.find(cur.convolution(map.getMapWidth(), map.getMapHeight(), withTime))->second);
 
-        if (maxTime == -1 || cur.g < maxTime) {
-            std::list<NodeType> successors = findSuccessors(cur, map, goal_i, goal_j, agentId, occupiedNodes,
-                                                        constraints, withCAT, CAT);
-            for (auto neigh : successors) {
-                if (close.find(neigh.convolution(map.getMapWidth(), map.getMapHeight(), withTime)) == close.end()) {
-                    neigh.parent = curPtr;
-                    if (!updateFocal(neigh, map)) {
-                        open.insert(map, neigh, withTime);
+            if (maxTime == -1 || cur.g < maxTime) {
+                std::list<NodeType> successors = findSuccessors(cur, map, goal_i, goal_j, agentId, occupiedNodes,
+                                                                constraints, withCAT, CAT);
+                for (auto neigh : successors) {
+                    if (close.find(neigh.convolution(map.getMapWidth(), map.getMapHeight(), withTime)) == close.end()) {
+                        neigh.parent = curPtr;
+                        if (!updateFocal(neigh, map)) {
+                            open.insert(map, neigh, withTime);
+                        }
                     }
                 }
+            }
+        }
+    }
+    else
+    {
+        auto subGoals = agentSet.getSubgoals(agentId);
+        //std::cout<<"subgoal planning\n";
+        for(int i=0; i < subGoals.size() - 1; i++)
+        {
+            NodeType start, goal;
+            if(i == 0)
+                start = NodeType(start_i, start_j, nullptr, startTime, 0);
+            else
+                start = NodeType(full_lppath.back().i, full_lppath.back().j, nullptr, full_lppath.back().g, 0);
+            //std::cout<<"SET END TIME\n";
+            setEndTime(start, start.i, start.j, start.g, agentId, constraints);
+            clearLists();
+            addStartNode(start, map, CAT);
+            addSuboptimalNode(start, map, CAT);
+            goal = NodeType(subGoals[i+1].i, subGoals[i+1].j);
+            //std::cout<<start.i<<" "<<start.j<<" "<<start.g<<" START\n";
+            //std::cout<<goal.i<<" "<<goal.j<<" GOAL\n";
+            while(!checkOpenEmpty()) {
+                ++sresult.numberofsteps;
+                if (sresult.numberofsteps % 100000 == 0) {
+                    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+                    int elapsedMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
+                    if (elapsedMilliseconds > 300000) {
+                        break;
+                    }
+                }
+
+                cur = getCur(map);
+
+                /*if (withTime && agentId == 6 && cur.i == 55 && cur.j == 207) {
+                std::cout << cur.i << " " << cur.j << " " << cur.g << " " << cur.conflictsCount << std::endl;
+            }*/
+
+                bool goalNode = false;
+                if ((isGoal != nullptr && isGoal(NodeType(start_i, start_j), cur, map, agentSet)) ||
+                        (isGoal == nullptr && cur.i == goal.i && cur.j == goal.j && checkWait(cur, subGoals[i+1].wait)))
+                 {
+                    //std::cout<<"OK! Goal found "<<goal.i<<" "<<goal.j<<"\n";
+                    goalNode = true;
+                    if (!constraints.hasFutureConstraint(cur.i, cur.j, cur.g, agentId) &&
+                            checkGoal(cur, goalTime, agentId, constraints))
+                    {
+                        sresult.pathfound = true;
+                        break;
+                    }
+                }
+
+                removeCur(cur, map);
+
+                if (goalNode) {
+                    subtractFutureConflicts(cur);
+                }
+
+                close[cur.convolution(map.getMapWidth(), map.getMapHeight(), withTime)] = cur;
+                NodeType *curPtr = &(close.find(cur.convolution(map.getMapWidth(), map.getMapHeight(), withTime))->second);
+
+                if (maxTime == -1 || cur.g < maxTime) {
+                    std::list<NodeType> successors = findSuccessors(cur, map, goal.i, goal.j, agentId, occupiedNodes,
+                                                                    constraints, withCAT, CAT);
+                    //std::cout<<successors.size()<<" succs size\n";
+                    for (auto neigh : successors) {
+                        if (close.find(neigh.convolution(map.getMapWidth(), map.getMapHeight(), withTime)) == close.end()) {
+                            neigh.parent = curPtr;
+                            if (!updateFocal(neigh, map)) {
+                                open.insert(map, neigh, withTime);
+                            }
+                        }
+                    }
+                }
+            }
+            //std::cout<<cur.i<<" "<<cur.j<<" "<<cur.g<<" cur GOAL\n";
+            //std::cout<<checkWait(cur, subGoals[i+1].wait)<<" PATH FOUND\n";
+            lppath.clear();
+            hppath.clear();
+            makePrimaryPath(cur, goalTime == -1 ? -1 : goalTime + 1);
+            makeSecondaryPath(map);
+            if(i > 0)
+                lppath.pop_front();
+            for(auto n: hppath)
+                full_hppath.push_back(n);
+            for(auto n: lppath)
+                full_lppath.push_back(n);
+            Node w = hppath.back();
+            if(i+1 < subGoals.size() - 1)
+            for(int k=0; k < subGoals[i+1].wait; k++)
+            {
+                w.g += 1;
+                full_hppath.push_back(w);
+                full_lppath.push_back(w);
             }
         }
     }
@@ -114,13 +211,23 @@ SearchResult ISearch<NodeType>::startSearch(const Map &map, const AgentSet &agen
         sresult.minF = std::min(double(cur.F), getMinFocalF());
         sresult.lastNode = cur;
         if (returnPath) {
-            lppath.clear();
-            hppath.clear();
-            makePrimaryPath(cur, goalTime == -1 ? -1 : goalTime + 1);
-            makeSecondaryPath(map);
+            if (agentSet.getSubgoals(agentId).size() == 0)
+            {
+                lppath.clear();
+                hppath.clear();
+                makePrimaryPath(cur, goalTime == -1 ? -1 : goalTime + 1);
+                makeSecondaryPath(map);
+            }
+            else
+            {
+                hppath = full_lppath;
+                lppath = full_lppath;
+            }
             sresult.hppath = &hppath; //Here is a constant pointer
             sresult.lppath = &lppath;
         }
+        /*for(auto n: lppath)
+            std::cout<<n.i<<" "<<n.j<<" "<<n.g<<" path\n";*/
     }
     return sresult;
 }

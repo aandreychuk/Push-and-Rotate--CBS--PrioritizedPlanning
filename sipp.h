@@ -22,6 +22,7 @@ protected:
                                   int agentId, const ConstraintsSet &constraints,
                                   const ConflictAvoidanceTable &CAT, bool isGoal) override;
     bool checkGoal(const NodeType &cur, int goalTime, int agentId, const ConstraintsSet &constraints) override;
+    bool checkWait(const NodeType &node, double wait_duration) override;
     virtual void splitBySoftConflicts(std::vector<std::pair<int, int>> &softConflictIntervals,
                                       const NodeType & node, const NodeType &prevNode, std::pair<int, int> interval,
                                       const ConflictAvoidanceTable &CAT);
