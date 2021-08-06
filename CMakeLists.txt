@@ -9,6 +9,7 @@ set(SOURCE_FILES
         config.cpp
         conflict_avoidance_table.cpp
         conflict_based_search.cpp
+		anytime_cbs.cpp
         conflict_set.cpp
         constraints_set.cpp
         dijkstra.cpp
@@ -29,6 +30,7 @@ set(SOURCE_FILES
         agent.h
         agent_move.h
         agent_set.h
+		anytime_cbs.h
         astar.h
         cbs_node.h
         config.h
